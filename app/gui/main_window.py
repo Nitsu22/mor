@@ -91,9 +91,6 @@ def run_gui() -> int:
             self.word_select_button = QPushButton("Wordファイルを選択")
             self.word_select_button.clicked.connect(self._choose_word_file)
 
-            self.word_load_button = QPushButton("Wordから読み込む")
-            self.word_load_button.clicked.connect(self._load_word_file)
-
             self.input_edit = QPlainTextEdit()
             self.input_edit.setPlaceholderText("文字化テキストを入力してください。")
             self.input_edit.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
@@ -182,7 +179,6 @@ def run_gui() -> int:
             word_row.setSpacing(8)
             word_row.addWidget(self.word_path_edit, 1)
             word_row.addWidget(self.word_select_button)
-            word_row.addWidget(self.word_load_button)
 
             text_label = QLabel("文字化テキスト入力欄")
             text_label.setObjectName("fieldLabel")
@@ -344,16 +340,15 @@ def run_gui() -> int:
             )
             if not selected:
                 return
-            self._set_word_path(Path(selected))
+            path = Path(selected)
+            self._set_word_path(path)
+            self._load_word_file(path)
 
-        def _load_word_file(self) -> None:
-            if self._word_path is None:
-                self._choose_word_file()
-                if self._word_path is None:
-                    return
+        def _load_word_file(self, path: Path) -> None:
+            self.status_label.setText("Word読み込み中...")
 
             try:
-                extracted = extract_docx_text(self._word_path)
+                extracted = extract_docx_text(path)
             except MorphAppError as exc:
                 QMessageBox.warning(self, "Word読み込みエラー", str(exc))
                 self.status_label.setText("Word読み込みエラー")
