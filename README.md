@@ -1,8 +1,8 @@
-# 形態素解析ツール Python版
+# 形態素解析ツール Word入力版
 
 Perl CGI版 `maweb.pl` を、Windows/Macで動かせるデスクトップアプリへ移植するためのPythonプロジェクトです。
 
-現段階では、解析コアとCLIに加えて、解析・結果確認・CSV保存ができる簡易GUIを用意しています。
+現段階では、解析コアとCLIに加えて、Word `.docx` 読み込み、解析、結果確認、CSV保存ができる簡易GUIを用意しています。
 
 ## セットアップ
 
@@ -48,6 +48,7 @@ python -m app.main gui
 ```
 
 画面では、協力者ID、調査内容、文字化テキストを指定できます。
+Word入力では `.docx` ファイルのみ対応します。Word version1は最初の `[C]` / `[K]` 行から、Word version2は最初のタイムスタンプ行から読み込み、version2の行頭タイムスタンプは解析対象から除外します。
 解析後は表で結果を確認し、CSV保存できます。
 
 配布版アプリは `unidic-lite` を同梱して動作します。
@@ -70,14 +71,13 @@ PYINSTALLER_CONFIG_DIR=.pyinstaller-cache pyinstaller --noconfirm packaging/pyin
 成果物は以下に作成されます。
 
 ```text
-dist/形態素解析ツール.app
-dist/形態素解析ツール-mac.zip
+dist/形態素解析ツール Word入力版.app
 ```
 
 ## Windows版アプリのビルド
 
 GitHubにこのプロジェクトをpushすると、GitHub ActionsでWindows版を自動ビルドできます。
-Actions画面の `Build Windows App` を開き、完了した実行の `Artifacts` から `形態素解析ツール-windows` をダウンロードします。
+Actions画面の `Build Windows App` を開き、完了した実行の `Artifacts` から `形態素解析ツール-Word入力版-windows` をダウンロードします。
 
 手元のWindows環境で直接ビルドする場合は、以下を実行します。
 
@@ -86,7 +86,7 @@ python -m pip install -e ".[gui,mecab,build,test]"
 python scripts/generate_icon.py
 python -m pytest
 pyinstaller --noconfirm packaging/pyinstaller_windows.spec
-Compress-Archive -Path "dist/形態素解析ツール" -DestinationPath "dist/形態素解析ツール-windows.zip" -Force
+Compress-Archive -Path "dist/形態素解析ツール Word入力版" -DestinationPath "dist/形態素解析ツール-Word入力版-windows.zip" -Force
 ```
 
 Windows版も `unidic-lite` を同梱して動作します。
@@ -95,13 +95,14 @@ Windows版も `unidic-lite` を同梱して動作します。
 ## 主要ファイル
 
 ```text
-app/core/constants.py      定数
-app/core/models.py         データ構造
-app/core/validator.py      入力検証
-app/core/tag_expander.py   [...] タグ展開
-app/core/normalizer.py     MeCab部分解析済み形式への正規化
-app/core/mecab_runner.py   mecab-python3 呼び出し
-app/core/parser.py         解析全体の組み立て
-app/export/csv_exporter.py UTF-16LE BOM付きCSV保存
-app/main.py                CLI入口
+app/core/constants.py         定数
+app/core/models.py            データ構造
+app/core/validator.py         入力検証
+app/core/tag_expander.py      [...] タグ展開
+app/core/normalizer.py        MeCab部分解析済み形式への正規化
+app/core/mecab_runner.py      mecab-python3 呼び出し
+app/core/parser.py            解析全体の組み立て
+app/importers/docx_reader.py  Word .docx 読み込み
+app/export/csv_exporter.py    UTF-16LE BOM付きCSV保存
+app/main.py                   CLI入口
 ```

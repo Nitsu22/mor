@@ -2,9 +2,6 @@ name: Build Windows App
 
 on:
   push:
-    branches:
-      - main
-      - master
   workflow_dispatch:
 
 jobs:
@@ -39,12 +36,12 @@ jobs:
         shell: pwsh
         run: |
           Compress-Archive `
-            -Path "dist/形態素解析ツール" `
-            -DestinationPath "dist/形態素解析ツール-windows.zip" `
+            -Path "dist/形態素解析ツール Word入力版" `
+            -DestinationPath "dist/形態素解析ツール-Word入力版-windows.zip" `
             -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 形態素解析ツール-windows
-          path: dist/形態素解析ツール-windows.zip
+          name: 形態素解析ツール-Word入力版-windows
+          path: dist/形態素解析ツール-Word入力版-windows.zip

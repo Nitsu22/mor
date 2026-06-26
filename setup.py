@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 setup(
     name="morph-app",
     version="0.1.0",
-    description="Desktop morph-analysis app prototype",
+    description="Desktop morph-analysis app with Word docx input",
     packages=find_packages(),
     python_requires=">=3.9",
     extras_require={

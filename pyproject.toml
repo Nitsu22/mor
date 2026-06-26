@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "morph-app"
 version = "0.1.0"
-description = "Desktop morph-analysis app prototype"
+description = "Desktop morph-analysis app with Word docx input"
 requires-python = ">=3.9"
 dependencies = []
 

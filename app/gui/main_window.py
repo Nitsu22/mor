@@ -9,6 +9,10 @@ from app.core.mecab_runner import MecabRunner
 from app.core.models import ParseRequest, ParseResult
 from app.core.parser import Parser
 from app.export.csv_exporter import export_parse_result
+from app.importers.docx_reader import extract_docx_text
+
+
+APP_NAME = "形態素解析ツール Word入力版"
 
 
 LEGEND_ROWS: tuple[tuple[str, str], ...] = (
@@ -62,8 +66,9 @@ def run_gui() -> int:
         def __init__(self) -> None:
             super().__init__()
             self._result: ParseResult | None = None
+            self._word_path: Path | None = None
 
-            self.setWindowTitle("形態素解析ツール")
+            self.setWindowTitle(APP_NAME)
             self.resize(1320, 820)
 
             self.participant_id_edit = QLineEdit()
@@ -78,6 +83,16 @@ def run_gui() -> int:
             self.survey_combo.setMinimumWidth(250)
 
             self.dont_use_tags_check = QCheckBox("解析にタグを使用しない")
+
+            self.word_path_edit = QLineEdit()
+            self.word_path_edit.setPlaceholderText(".docx ファイルを選択してください。")
+            self.word_path_edit.setReadOnly(True)
+
+            self.word_select_button = QPushButton("Wordファイルを選択")
+            self.word_select_button.clicked.connect(self._choose_word_file)
+
+            self.word_load_button = QPushButton("Wordから読み込む")
+            self.word_load_button.clicked.connect(self._load_word_file)
 
             self.input_edit = QPlainTextEdit()
             self.input_edit.setPlaceholderText("文字化テキストを入力してください。")
@@ -121,7 +136,7 @@ def run_gui() -> int:
             root_layout.setContentsMargins(20, 18, 20, 16)
             root_layout.setSpacing(14)
 
-            title_label = QLabel("形態素解析ツール")
+            title_label = QLabel(APP_NAME)
             title_label.setObjectName("titleLabel")
 
             top_layout = QHBoxLayout()
@@ -160,6 +175,15 @@ def run_gui() -> int:
             fields_layout.setColumnStretch(0, 1)
             fields_layout.setColumnStretch(1, 1)
 
+            word_label = QLabel("Word入力")
+            word_label.setObjectName("fieldLabel")
+
+            word_row = QHBoxLayout()
+            word_row.setSpacing(8)
+            word_row.addWidget(self.word_path_edit, 1)
+            word_row.addWidget(self.word_select_button)
+            word_row.addWidget(self.word_load_button)
+
             text_label = QLabel("文字化テキスト入力欄")
             text_label.setObjectName("fieldLabel")
 
@@ -179,6 +203,8 @@ def run_gui() -> int:
             button_row.addWidget(self.dont_use_tags_check)
 
             layout.addLayout(fields_layout)
+            layout.addWidget(word_label)
+            layout.addLayout(word_row)
             layout.addWidget(text_label)
             layout.addWidget(self.input_edit)
             layout.addWidget(note_label)
@@ -304,8 +330,65 @@ def run_gui() -> int:
             self.result_table.clear()
             self.result_table.setRowCount(0)
             self.result_table.setColumnCount(0)
+            self._word_path = None
+            self.word_path_edit.clear()
             self._result = None
             self.status_label.setText("未解析")
+
+        def _choose_word_file(self) -> None:
+            selected, _ = QFileDialog.getOpenFileName(
+                self,
+                "Wordファイルを選択",
+                str(Path.home()),
+                "Word documents (*.docx)",
+            )
+            if not selected:
+                return
+            self._set_word_path(Path(selected))
+
+        def _load_word_file(self) -> None:
+            if self._word_path is None:
+                self._choose_word_file()
+                if self._word_path is None:
+                    return
+
+            try:
+                extracted = extract_docx_text(self._word_path)
+            except MorphAppError as exc:
+                QMessageBox.warning(self, "Word読み込みエラー", str(exc))
+                self.status_label.setText("Word読み込みエラー")
+                return
+            except OSError as exc:
+                QMessageBox.warning(self, "Word読み込みエラー", str(exc))
+                self.status_label.setText("Word読み込みエラー")
+                return
+            except Exception as exc:  # noqa: BLE001 - GUI should report unexpected failures.
+                QMessageBox.critical(self, "予期しないエラー", str(exc))
+                self.status_label.setText("予期しないエラー")
+                return
+
+            self.input_edit.setPlainText(extracted.text)
+            if extracted.participant_id:
+                self.participant_id_edit.setText(extracted.participant_id)
+            if extracted.survey_content:
+                self._set_survey_content(extracted.survey_content)
+            self.result_table.clear()
+            self.result_table.setRowCount(0)
+            self.result_table.setColumnCount(0)
+            self._result = None
+            self.status_label.setText(
+                f"{extracted.source_format}: {extracted.line_count} 行を読み込みました"
+            )
+
+        def _set_word_path(self, path: Path) -> None:
+            self._word_path = path
+            self.word_path_edit.setText(str(path))
+
+        def _set_survey_content(self, survey_content: str) -> None:
+            for index in range(self.survey_combo.count()):
+                if self.survey_combo.itemData(index) == survey_content:
+                    self.survey_combo.setCurrentIndex(index)
+                    return
 
         def _parse_current_input(self) -> ParseResult:
             request = ParseRequest(

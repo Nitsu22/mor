@@ -26,7 +26,7 @@ exe = EXE(
     pyz,
     a.scripts,
     [],
-    name="形態素解析ツール",
+    name="形態素解析ツール Word入力版",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -42,5 +42,5 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=True,
-    name="形態素解析ツール",
+    name="形態素解析ツール Word入力版",
 )
