@@ -28,7 +28,7 @@ python -m app.main parse sample.txt \
   --output result.csv
 ```
 
-`resources/mjk-cwj.dic` が存在する場合は、自動でMeCabユーザー辞書として利用します。
+`resources/mjk-cwj.dic` をMeCabユーザー辞書として自動利用します。
 任意のユーザー辞書を指定する場合は `--user-dic` を使います。
 
 ```bash
@@ -60,11 +60,10 @@ python -m app.main gui
 
 画面では、協力者ID、調査内容、文字化テキストを指定できます。
 Word入力では `.docx` ファイルのみ対応します。Wordファイルを選択すると、自動で文字化テキスト入力欄へ読み込みます。Word version1は最初の `[C]` / `[K]` 行から、Word version2は最初のタイムスタンプ行から読み込み、version2の行頭タイムスタンプは解析対象から除外します。
-ユーザー辞書欄では、`mjk-cwj.dic` などのMeCabユーザー辞書を選択して解析に使えます。`resources/mjk-cwj.dic` を置いてビルドした場合は、配布版アプリ起動時に自動で設定されます。
 解析後は表で結果を確認し、CSV保存できます。
 
 配布版アプリは `unidic-lite` を同梱して動作します。
-`mjk-cwj.dic` を使う場合は、同じ `unidic-lite` 系の辞書を前提に作成した `.dic` を指定してください。
+`mjk-cwj.dic` も同梱し、MeCabユーザー辞書として自動で使用します。
 
 ## テスト
 
