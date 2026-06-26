@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.pyinstaller-cache/
+.pytest_cache/
+.venv/
+.venv-py38-backup/
+*.egg-info/
+build/
+dist/
+assets/icon.iconset/
+*.zip
+*.spec.bak
