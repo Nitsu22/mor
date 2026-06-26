@@ -8,6 +8,7 @@ from app.core.errors import MorphAppError
 from app.core.mecab_runner import MecabRunner
 from app.core.models import ParseRequest
 from app.core.parser import Parser
+from app.core.user_dictionary import find_bundled_user_dic
 from app.export.csv_exporter import export_parse_result
 
 
@@ -64,7 +65,10 @@ def run_parse(args: argparse.Namespace) -> int:
             text=text,
             dont_use_tags=args.dont_use_tags,
         )
-        tokenizer = MecabRunner(dic_dir=args.dic_dir, user_dic=args.user_dic)
+        tokenizer = MecabRunner(
+            dic_dir=args.dic_dir,
+            user_dic=args.user_dic or find_bundled_user_dic(),
+        )
         result = Parser(tokenizer).parse(request)
         export_parse_result(args.output, result)
     except MorphAppError as exc:

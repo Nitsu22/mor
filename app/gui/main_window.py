@@ -8,6 +8,7 @@ from app.core.errors import MorphAppError
 from app.core.mecab_runner import MecabRunner
 from app.core.models import ParseRequest, ParseResult
 from app.core.parser import Parser
+from app.core.user_dictionary import USER_DIC_FILENAME, find_bundled_user_dic
 from app.export.csv_exporter import export_parse_result
 from app.importers.docx_reader import extract_docx_text
 
@@ -67,6 +68,7 @@ def run_gui() -> int:
             super().__init__()
             self._result: ParseResult | None = None
             self._word_path: Path | None = None
+            self._user_dic_path: Path | None = find_bundled_user_dic()
 
             self.setWindowTitle(APP_NAME)
             self.resize(1320, 820)
@@ -90,6 +92,21 @@ def run_gui() -> int:
 
             self.word_select_button = QPushButton("Wordファイルを選択")
             self.word_select_button.clicked.connect(self._choose_word_file)
+
+            self.user_dic_check = QCheckBox("ユーザー辞書を使う")
+            self.user_dic_check.setChecked(self._user_dic_path is not None)
+
+            self.user_dic_path_edit = QLineEdit()
+            self.user_dic_path_edit.setPlaceholderText(f"{USER_DIC_FILENAME} を選択できます。")
+            self.user_dic_path_edit.setReadOnly(True)
+            if self._user_dic_path is not None:
+                self.user_dic_path_edit.setText(str(self._user_dic_path))
+
+            self.user_dic_select_button = QPushButton("辞書を選択")
+            self.user_dic_select_button.clicked.connect(self._choose_user_dic)
+
+            self.user_dic_clear_button = QPushButton("解除")
+            self.user_dic_clear_button.clicked.connect(self._clear_user_dic)
 
             self.input_edit = QPlainTextEdit()
             self.input_edit.setPlaceholderText("文字化テキストを入力してください。")
@@ -180,6 +197,16 @@ def run_gui() -> int:
             word_row.addWidget(self.word_path_edit, 1)
             word_row.addWidget(self.word_select_button)
 
+            user_dic_label = QLabel("ユーザー辞書")
+            user_dic_label.setObjectName("fieldLabel")
+
+            user_dic_row = QHBoxLayout()
+            user_dic_row.setSpacing(8)
+            user_dic_row.addWidget(self.user_dic_check)
+            user_dic_row.addWidget(self.user_dic_path_edit, 1)
+            user_dic_row.addWidget(self.user_dic_select_button)
+            user_dic_row.addWidget(self.user_dic_clear_button)
+
             text_label = QLabel("文字化テキスト入力欄")
             text_label.setObjectName("fieldLabel")
 
@@ -201,6 +228,8 @@ def run_gui() -> int:
             layout.addLayout(fields_layout)
             layout.addWidget(word_label)
             layout.addLayout(word_row)
+            layout.addWidget(user_dic_label)
+            layout.addLayout(user_dic_row)
             layout.addWidget(text_label)
             layout.addWidget(self.input_edit)
             layout.addWidget(note_label)
@@ -344,6 +373,29 @@ def run_gui() -> int:
             self._set_word_path(path)
             self._load_word_file(path)
 
+        def _choose_user_dic(self) -> None:
+            selected, _ = QFileDialog.getOpenFileName(
+                self,
+                "ユーザー辞書を選択",
+                str(Path.home()),
+                "MeCab user dictionaries (*.dic);;All files (*)",
+            )
+            if not selected:
+                return
+            path = Path(selected)
+            self._user_dic_path = path
+            self.user_dic_path_edit.setText(str(path))
+            self.user_dic_check.setChecked(True)
+            self._result = None
+            self.status_label.setText(f"ユーザー辞書を設定しました: {path.name}")
+
+        def _clear_user_dic(self) -> None:
+            self._user_dic_path = None
+            self.user_dic_path_edit.clear()
+            self.user_dic_check.setChecked(False)
+            self._result = None
+            self.status_label.setText("ユーザー辞書を解除しました")
+
         def _load_word_file(self, path: Path) -> None:
             self.status_label.setText("Word読み込み中...")
 
@@ -392,7 +444,14 @@ def run_gui() -> int:
                 text=self.input_edit.toPlainText(),
                 dont_use_tags=self.dont_use_tags_check.isChecked(),
             )
-            return Parser(MecabRunner()).parse(request)
+            return Parser(MecabRunner(user_dic=self._selected_user_dic())).parse(request)
+
+        def _selected_user_dic(self) -> Path | None:
+            if not self.user_dic_check.isChecked():
+                return None
+            if self._user_dic_path is None:
+                raise MorphAppError("ユーザー辞書を使う場合は .dic ファイルを選択してください。")
+            return self._user_dic_path
 
         def _set_result(self, result: ParseResult) -> None:
             self._result = result

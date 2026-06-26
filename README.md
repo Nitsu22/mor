@@ -28,6 +28,17 @@ python -m app.main parse sample.txt \
   --output result.csv
 ```
 
+`resources/mjk-cwj.dic` が存在する場合は、自動でMeCabユーザー辞書として利用します。
+任意のユーザー辞書を指定する場合は `--user-dic` を使います。
+
+```bash
+python -m app.main parse sample.txt \
+  --participant-id ABC01 \
+  --survey-content D \
+  --output result.csv \
+  --user-dic /path/to/mjk-cwj.dic
+```
+
 対話データの場合は、各行を `C ` / `K ` または `[C]` / `[K]` で始めます。
 
 ```text
@@ -49,10 +60,11 @@ python -m app.main gui
 
 画面では、協力者ID、調査内容、文字化テキストを指定できます。
 Word入力では `.docx` ファイルのみ対応します。Wordファイルを選択すると、自動で文字化テキスト入力欄へ読み込みます。Word version1は最初の `[C]` / `[K]` 行から、Word version2は最初のタイムスタンプ行から読み込み、version2の行頭タイムスタンプは解析対象から除外します。
+ユーザー辞書欄では、`mjk-cwj.dic` などのMeCabユーザー辞書を選択して解析に使えます。`resources/mjk-cwj.dic` を置いてビルドした場合は、配布版アプリ起動時に自動で設定されます。
 解析後は表で結果を確認し、CSV保存できます。
 
 配布版アプリは `unidic-lite` を同梱して動作します。
-元Perl版で使っていた `mjk-cwj.dic` は使用しません。
+`mjk-cwj.dic` を使う場合は、同じ `unidic-lite` 系の辞書を前提に作成した `.dic` を指定してください。
 
 ## テスト
 
@@ -101,6 +113,7 @@ app/core/validator.py         入力検証
 app/core/tag_expander.py      [...] タグ展開
 app/core/normalizer.py        MeCab部分解析済み形式への正規化
 app/core/mecab_runner.py      mecab-python3 呼び出し
+app/core/user_dictionary.py   mjk-cwj.dic の自動検出
 app/core/parser.py            解析全体の組み立て
 app/importers/docx_reader.py  Word .docx 読み込み
 app/export/csv_exporter.py    UTF-16LE BOM付きCSV保存

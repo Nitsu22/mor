@@ -47,7 +47,9 @@ class MecabRunner:
         args = ["-p"]
         if self.dic_dir:
             args.extend(["-d", str(self.dic_dir)])
-        if self.user_dic and self.user_dic.exists():
+        if self.user_dic:
+            if not self.user_dic.exists():
+                raise MecabError(f"ユーザー辞書が見つかりません: {self.user_dic}")
             args.extend(["-u", str(self.user_dic)])
 
         try:
